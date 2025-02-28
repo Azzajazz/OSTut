@@ -1,0 +1,5 @@
+# Local debugging files
+.gdbinit
+
+# Build folder
+build
