@@ -4,7 +4,6 @@
 
 ### High priority
 
-- __IMPORTANT__ Set up version control
 - Enumerate memory in bootloader
 - Make sure kernel code is debuggable
 - Switch to protected mode
@@ -36,3 +35,4 @@ This exists mostly for my own benefit, so that I can see progress.
 - Separate bootloader and kernel code + Makefiles (Do we want a unity build?)
 - Write minimal kernel code in C
 - Compile with clang freestanding
+- Set up version control
