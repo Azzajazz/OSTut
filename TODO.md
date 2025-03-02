@@ -7,22 +7,25 @@
 - Enumerate memory in bootloader
 - Make sure kernel code is debuggable
 - Switch to protected mode
-- Informative bootloader messages
 - Kernel code that actually does something (with VGA, for example)
 
 ### Low priority
 
 - Be flexible in how many sectors we load from floppy disk so that the kernel code isn't truncated
-- 16-bit RM integer printing (decimal)
 - Look at how to enumerate high memory
 - Pass parameters from make into build.sh files to avoid duplication
+- See if we can jump to 32-bit code while in Real Mode. If not, we need to switch to PM in the bootloader.
 
 ## Tasks in progress (and subtask breakdown):
 
+- __NOW__ Informative bootloader messages
+  - __NOW__ RM logging? PM logging?
+    - Logging prefixes
+  - Report enumerated memory
+  - Report switch to protected mode
+  - Report any failures
 - Firm up memory map (how does this work when we don't necessarily know the memory layout?)
   - Preliminary high memory map (blocked on enumerating high memory and how these two will work together)
-- Compile kernel code freestanding
-  - See if we can jump to 32-bit code while in Real Mode. If not, we need to switch to PM in the bootloader.
 
 ## Finished
 
@@ -36,3 +39,5 @@ This exists mostly for my own benefit, so that I can see progress.
 - Write minimal kernel code in C
 - Compile with clang freestanding
 - Set up version control
+- 16-bit RM integer printing (decimal)
+- Restricted RM format printing
