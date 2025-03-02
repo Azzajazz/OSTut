@@ -14,27 +14,6 @@ rm_print_char:
 
 ; @Function
 ; Params:
-;   bp + 4: Address of string
-; Returns:
-;   None
-rm_print_string:
-    enter 0, 0
-    mov di, [bp + 4]
-.loop:
-    movzx ax, byte [di]
-    test al, al
-    je .done
-    push ax 
-    call rm_print_char
-    add sp, 2
-    inc di 
-    jmp .loop
-.done:
-    leave
-    ret
-
-; @Function
-; Params:
 ;   bp + 4: Number to print
 ; Returns:
 ;   None
