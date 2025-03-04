@@ -4,7 +4,6 @@
 
 ### High priority
 
-- Change `build.sh` scripts to makefiles to make sure they are built from the top-level `Makefile`.
 - Enumerate memory in bootloader
 - Make sure kernel code is debuggable
 - Switch to protected mode
@@ -19,13 +18,11 @@
 
 ## Tasks in progress (and subtask breakdown):
 
-- __NOW__ Informative bootloader messages
-  - __NOW__ RM logging? PM logging?
-    - __NOW__ Logging prefixes
+- __BLOCKED__ Informative bootloader messages
   - Report enumerated memory
   - Report switch to protected mode
   - Report any failures
-- Firm up memory map (how does this work when we don't necessarily know the memory layout?)
+- __BLOCKED__ Firm up memory map (how does this work when we don't necessarily know the memory layout?)
   - Preliminary high memory map (blocked on enumerating high memory and how these two will work together)
 
 ## Finished
@@ -42,3 +39,6 @@ This exists mostly for my own benefit, so that I can see progress.
 - Set up version control
 - 16-bit RM integer printing (decimal)
 - Restricted RM format printing
+- RM logging? PM logging?
+- Logging prefixes
+- Make sure `build.sh` scripts are always run via top-level make file

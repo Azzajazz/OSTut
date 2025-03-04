@@ -19,18 +19,20 @@ qemu-debug: build-os
 .PHONY: build-os
 build-os: make-build-dir $(DISKIMG)
 
-$(DISKIMG): $(BOOTBIN) $(KERNELBIN)
+$(DISKIMG): build_bootloader build_kernel
 	dd if=/dev/zero of=$@ bs=512 count=2880
 	dd if=$(BOOTBIN) of=$@ conv=notrunc bs=512
 	dd if=$(KERNELBIN) of=$@ conv=notrunc bs=512 seek=1
 
-.ONESHELL: $(BOOTBIN)
-$(BOOTBIN):
+.ONESHELL: build_bootloader
+.PHONY: build_bootloader
+build_bootloader:
 	cd $(SRCDIR)/bootloader
 	./build.sh
 
-.ONESHELL: $(KERNELBIN)
-$(KERNELBIN):
+.ONESHELL: build_kernel
+.PHONY: build_kernel
+build_kernel:
 	cd $(SRCDIR)/kernel
 	./build.sh
 
