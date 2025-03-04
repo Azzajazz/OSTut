@@ -38,7 +38,7 @@ boot:
     mov cl, 2
     mov dh, 0
     mov dl, 0
-    mov bx, 0x50
+    mov bx, 0x500
     int 0x13
     jmp 0x500
 
