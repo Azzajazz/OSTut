@@ -1,16 +1,9 @@
-; @Function
-; Params:
-;   bp + 4: Character to print
-; Returns:
-;   None
-rm_print_char:
-    enter 0, 0
-    mov ax, [bp + 4]
+%macro print_char 1
+    mov al, %1
     mov ah, 0x0e
     mov bh, 0
     int 0x10
-    leave
-    ret
+%endmacro
 
 ; @Function
 ; Params:
@@ -19,12 +12,8 @@ rm_print_char:
 ;   None
 rm_print_hex_16:
     enter 0, 0
-    push '0'
-    call rm_print_char
-    add sp, 2
-    push 'x'
-    call rm_print_char
-    add sp, 2
+    print_char '0'
+    print_char 'x'
 
     mov ax, [bp + 4]
     mov bx, 0xf000 ; Mask
@@ -44,9 +33,7 @@ rm_print_hex_16:
 .print:
     push ax
     push bx
-    push dx
-    call rm_print_char
-    pop dx
+    print_char dl
     pop bx
     pop ax
 
@@ -85,9 +72,7 @@ rm_print_dec_16:
     je .done
     movzx ax, byte [bx + di]
     push bx
-    push ax
-    call rm_print_char
-    add sp, 2
+    print_char al
     pop bx
     jmp .print_loop
 .done:
@@ -120,13 +105,7 @@ rm_vprint_fmt_16:
     je .done
     cmp al, '%'
     je .format
-    push si
-    push di
-    push ax
-    call rm_print_char
-    pop ax
-    pop di
-    pop si
+    print_char al
     jmp .loop
 .format:
     inc di
@@ -135,23 +114,11 @@ rm_vprint_fmt_16:
     je .hex
     cmp al, 'd'
     je .dec
-    push si
-    push di
-    push ax
-    call rm_print_char
-    pop ax
-    pop di
-    pop si
+    print_char al
     jmp .loop
 .hex:
     mov ax, [bp + si]
-    push si
-    push di
-    push ax
-    call rm_print_hex_16
-    pop ax
-    pop di
-    pop si
+    print_char al
     add si, 2
     jmp .loop
 .dec:
