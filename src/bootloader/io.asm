@@ -103,6 +103,13 @@ rm_print_dec_16:
 ;   bp + 4 * (n + 1): nth format argument 
 rm_print_fmt_16:
     enter 0, 0
+    call rm_vprint_fmt_16
+    leave
+    ret
+
+; @Function
+; varargs version of rm_print_fmt_16. This does not reset bp
+rm_vprint_fmt_16:
     mov di, [bp + 4]
     mov si, 6 ; Index into format arguments
     dec di
@@ -159,5 +166,60 @@ rm_print_fmt_16:
     add si, 2
     jmp .loop
 .done:
+    ret
+
+info_pref: db "INFO", 0
+ok_pref: db "OK", 0
+warn_pref: db "WARN", 0
+error_pref: db "ERROR", 0
+
+; @Function
+; Logging to console in real mode
+; Params:
+;   bp + 4: Log level (0 = info, 1 = OK, 2 = warn, 3 = error)
+;   bp + 6: Format string
+;   bp + 8...: Format string arguments
+rm_log:
+    enter 0, 0
+    mov al, '['
+    mov ah, 0x0e
+    mov bh, 0
+    int 0x10
+    mov ax, [bp + 4]
+    cmp ax, 0
+    je .info
+    cmp ax, 1
+    je .ok
+    cmp ax, 2
+    je .warn
+    ; Error
+    push error_pref
+    jmp .print_pref
+.info:
+    push info_pref
+    jmp .print_pref
+.ok:
+    push ok_pref
+    jmp .print_pref
+.warn:
+    push warn_pref
+.print_pref:
+    call rm_print_fmt_16
+    add sp, 2
+
+    mov al, ']'
+    mov ah, 0x0e
+    mov bh, 0
+    int 0x10
+
+    mov al, ' '
+    mov ah, 0x0e
+    mov bh, 0
+    int 0x10
+    
+    add bp, 2
+    call rm_vprint_fmt_16
+    sub bp, 2
+
     leave
     ret

@@ -28,8 +28,9 @@ boot:
     int 0x12
     push ax
     push memory_enumerate_msg
-    call rm_print_fmt_16
-    add sp, 4
+    push 0
+    call rm_log
+    add sp, 6
 
     mov ah, 0x02
     mov al, 1

@@ -4,6 +4,7 @@
 
 ### High priority
 
+- Change `build.sh` scripts to makefiles to make sure they are built from the top-level `Makefile`.
 - Enumerate memory in bootloader
 - Make sure kernel code is debuggable
 - Switch to protected mode
@@ -20,7 +21,7 @@
 
 - __NOW__ Informative bootloader messages
   - __NOW__ RM logging? PM logging?
-    - Logging prefixes
+    - __NOW__ Logging prefixes
   - Report enumerated memory
   - Report switch to protected mode
   - Report any failures
