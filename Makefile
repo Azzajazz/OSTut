@@ -22,7 +22,7 @@ build-os: make-build-dir $(DISKIMG)
 $(DISKIMG): build_bootloader build_kernel
 	dd if=/dev/zero of=$@ bs=512 count=2880
 	dd if=$(BOOTBIN) of=$@ conv=notrunc bs=512
-	dd if=$(KERNELBIN) of=$@ conv=notrunc bs=512 seek=1
+	dd if=$(KERNELBIN) of=$@ conv=notrunc bs=512 seek=2
 
 .ONESHELL: build_bootloader
 .PHONY: build_bootloader

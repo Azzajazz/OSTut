@@ -140,6 +140,10 @@ ok_pref: db "OK", 0
 warn_pref: db "WARN", 0
 error_pref: db "ERROR", 0
 
+%define INFO 0
+%define OK 1
+%define WARN 2
+%define ERROR 3
 ; @Function
 ; Logging to console in real mode
 ; Params:
@@ -153,11 +157,11 @@ rm_log:
     mov bh, 0
     int 0x10
     mov ax, [bp + 4]
-    cmp ax, 0
+    cmp ax, INFO 
     je .info
-    cmp ax, 1
+    cmp ax, OK
     je .ok
-    cmp ax, 2
+    cmp ax, WARN
     je .warn
     ; Error
     push error_pref

@@ -4,7 +4,6 @@
 
 ### High priority
 
-- Enumerate memory in bootloader
 - Make sure kernel code is debuggable
 - Switch to protected mode
 - Kernel code that actually does something (with VGA, for example)
@@ -18,6 +17,7 @@
 
 ## Tasks in progress (and subtask breakdown):
 
+- Enumerate memory in bootloader
 - __BLOCKED__ Informative bootloader messages
   - Report enumerated memory
   - Report switch to protected mode
@@ -42,3 +42,4 @@ This exists mostly for my own benefit, so that I can see progress.
 - RM logging? PM logging?
 - Logging prefixes
 - Make sure `build.sh` scripts are always run via top-level make file
+- Multi-stage bootloader
