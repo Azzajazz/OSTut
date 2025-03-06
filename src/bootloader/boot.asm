@@ -76,3 +76,50 @@ call rm_log
 add sp, 4
 
 ; Enumerate memory
+mov ebx, 0
+mov di, 0x500
+enumerate_loop:
+    clc
+    mov eax, 0xe820
+    mov edx, 0x534d4150
+    mov ecx, 20
+    int 0x15
+    ; TODO: Implement fallback mechanisms
+    jnc enumerate_success
+    push enumerate_error_msg
+    call error
+enumerate_success:
+    push bx ; Save for later
+    push di ; Save for later
+    ; Log the enumerated memory
+    ; First push the type of memory
+    mov ax, [di + 16]
+    push ax
+    ; Then push the length in four parts
+    ; TODO: QWORD decimal printing
+    mov ax, [di + 8]
+    push ax
+    mov ax, [di + 10]
+    push ax
+    ; Then push the address in four parts
+    mov ax, [di]
+    push ax
+    mov ax, [di + 2]
+    push ax
+    push enumerated_memory_msg
+    push INFO
+    call rm_log
+    add sp, 14 
+    pop di ; Restore
+    pop bx ; Restore
+
+    test ebx, ebx
+    je enumerate_done
+    add di, cx
+    jmp enumerate_loop
+enumerate_done:
+    cli
+    hlt
+    
+enumerate_error_msg: db "Failed to enumerate memory", CR, LF, 0
+enumerated_memory_msg: db "Mem region found. Start: %x%x, Size:%x%x, Type: %x", CR, LF, 0

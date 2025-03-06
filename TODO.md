@@ -17,7 +17,6 @@
 
 ## Tasks in progress (and subtask breakdown):
 
-- Enumerate memory in bootloader
 - __BLOCKED__ Informative bootloader messages
   - Report enumerated memory
   - Report switch to protected mode
@@ -43,3 +42,4 @@ This exists mostly for my own benefit, so that I can see progress.
 - Logging prefixes
 - Make sure `build.sh` scripts are always run via top-level make file
 - Multi-stage bootloader
+- Enumerate memory in bootloader

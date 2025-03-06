@@ -12,8 +12,6 @@
 ;   None
 rm_print_hex_16:
     enter 0, 0
-    print_char '0'
-    print_char 'x'
 
     mov ax, [bp + 4]
     mov bx, 0xf000 ; Mask
@@ -118,7 +116,13 @@ rm_vprint_fmt_16:
     jmp .loop
 .hex:
     mov ax, [bp + si]
-    print_char al
+    push si
+    push di
+    push ax
+    call rm_print_hex_16
+    pop ax
+    pop di
+    pop si
     add si, 2
     jmp .loop
 .dec:
