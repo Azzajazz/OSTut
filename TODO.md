@@ -4,6 +4,7 @@
 
 ### High priority
 
+- PM logging
 - Make sure kernel code is debuggable
 - Kernel code that actually does something (with VGA, for example)
 
@@ -15,10 +16,6 @@
 
 ## Tasks in progress (and subtask breakdown):
 
-- __NOW__ Switch to protected mode
-  - __DONE__ GDT
-  - A20 line
-  - __DONE__ Do the switch
 - __BLOCKED__ Informative bootloader messages
   - __DONE__ Report enumerated memory
   - Report switch to protected mode
@@ -45,3 +42,5 @@ This exists mostly for my own benefit, so that I can see progress.
 - Make sure `build.sh` scripts are always run via top-level make file
 - Multi-stage bootloader
 - Enumerate memory in bootloader
+- Switch to protected mode
+- Set up data segment registers for PM

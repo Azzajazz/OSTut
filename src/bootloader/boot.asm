@@ -193,9 +193,20 @@ kernel_load_success:
     or al, 1
     mov cr0, eax
 
-    jmp CODE_SEG:0x8000
-    
+    ;TODO: qemu has A20 enabled by default. If we want more portability, we need to enable the A20 ourselves (and minimize risk)
+    jmp CODE_SEG:pmode
+
 enumerate_error_msg: db "Failed to enumerate memory", CR, LF, 0
 enumerated_memory_msg: db "Mem region found. Start: %x%x, Size:%x%x, Type: %x", CR, LF, 0
 kernel_load_error_msg: db "Failed to load kernel", CR, LF, 0
 kernel_load_success_msg: db "Kernel loaded", CR, LF, 0
+
+bits 32
+pmode:
+    mov ax, DATA_SEG
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+    ;TODO: What do we do with esp/ebp? Do we need a bigger stack here? We have 30KB of stack. Not much.
