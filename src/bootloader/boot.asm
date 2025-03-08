@@ -8,8 +8,14 @@
 bits 16
 
 start:
+    cli
+    cld
+
     mov ax, 0
+    mov ds, ax
     mov es, ax
+    mov fs, ax
+    mov gs, ax
     mov bp, 0x7c00
     mov sp, bp
     jmp boot
@@ -35,20 +41,17 @@ boot:
     mov dl, 0
     mov bx, 0x7e00
     int 0x13
-    jnc .stage_2_load_success
+    jnc stage_2_load_success
     push stage_2_load_error_msg
     call error
 
-.stage_2_load_success:
+stage_2_load_success:
     push load_second_bootloader_msg
     push OK
     call rm_log
     add sp, 4
+    jmp stage_2
 
-    jmp 0x7e00
-
-    cli
-    hlt
 
 ; @Function
 ; Reporting for fatal errors
@@ -70,14 +73,63 @@ dw 0xaa55
 ; - Bootloader stage 2
 ; ------------------------------
 
-push stage_2_running_msg
-push INFO
-call rm_log
-add sp, 4
+gdt_start:
+    dq 0
+gdt_kernel_code:
+    dw 0xffff        ; Limit 0-15 = 0xffff
+    dw 0             ; Base 0-15 = 0
+    db 0             ; Base 16-23 = 0
+    db 0b10011010    ; Access byte = P(1) DPL(00) S(1) E(1) DC(0) RW(1) A(0)
+    db 0xcf          ; Flags = G(1) DB(1) L(0) Reserved(0), Limit 16-19 = 0xf
+    db 0             ; Base 24-31 = 0
+gdt_kernel_data:
+    dw 0xffff        ; Limit 0-15 = 0xffff
+    dw 0             ; Base 0-15 = 0
+    db 0             ; Base 16-23 = 0
+    db 0b10010010    ; Access byte = P(1) DPL(00) S(1) E(0) DC(0) RW(1) A(0)
+    db 0xcf          ; Flags = G(1) DB(1) L(0) Reserved(0), Limit 16-19 = 0xf
+    db 0             ; Base 24-31 = 0
+gdt_user_code:
+    dw 0xffff        ; Limit 0-15 = 0xffff
+    dw 0             ; Base 0-15 = 0
+    db 0             ; Base 16-23 = 0
+    db 0b11111010    ; Access byte = P(1) DPL(11) S(1) E(1) DC(0) RW(1) A(0)
+    db 0xcf          ; Flags = G(1) DB(1) L(0) Reserved(0), Limit 16-19 = 0xf
+    db 0             ; Base 24-31 = 0
+gdt_user_data:
+    dw 0xffff        ; Limit 0-15 = 0xffff
+    dw 0             ; Base 0-15 = 0
+    db 0             ; Base 16-23 = 0
+    db 0b11110010    ; Access byte = P(1) DPL(11) S(1) E(0) DC(0) RW(1) A(0)
+    db 0xcf          ; Flags = G(1) DB(1) L(0) Reserved(0), Limit 16-19 = 0xf
+    db 0             ; Base 24-31 = 0
+gdt_tss:
+    %define TSS_BASE 0x500
+    %define TSS_LIMIT 0x6b
+    dw (TSS_LIMIT & 0xffff)
+    dw (TSS_BASE & 0xffff)
+    db (TSS_BASE >> 16)
+    db 0b10001001        ; Access byte = P(1) DPL(0) S(0) Type(1001)
+    db (TSS_LIMIT >> 16) ; Flags = G(0) DB(0) L(0) Reserved(0)
+    db (TSS_BASE >> 24)
+gdt_end:
 
-; Enumerate memory
-mov ebx, 0
-mov di, 0x500
+gdtr: 
+    dw (gdt_end - gdt_start - 1)
+    dd gdt_start
+
+%define CODE_SEG (gdt_kernel_code - gdt_start)
+%define DATA_SEG (gdt_kernel_data - gdt_start)
+
+stage_2:
+    push stage_2_running_msg
+    push INFO
+    call rm_log
+    add sp, 4
+
+    ; Enumerate memory
+    mov ebx, 0
+    mov di, 0x500
 enumerate_loop:
     clc
     mov eax, 0xe820
@@ -118,8 +170,32 @@ enumerate_success:
     add di, cx
     jmp enumerate_loop
 enumerate_done:
-    cli
-    hlt
+    clc
+    mov ah, 0x02
+    mov al, 1
+    mov ch, 0
+    mov cl, 3
+    mov dh, 0
+    mov dl, 0
+    mov bx, 0x8000
+    int 0x13
+    jnc kernel_load_success
+    push kernel_load_error_msg
+    call error
+kernel_load_success:
+    push kernel_load_success_msg
+    push OK
+    call rm_log
+    add sp, 4
+
+    lgdt [gdtr]
+    mov eax, cr0
+    or al, 1
+    mov cr0, eax
+
+    jmp CODE_SEG:0x8000
     
 enumerate_error_msg: db "Failed to enumerate memory", CR, LF, 0
 enumerated_memory_msg: db "Mem region found. Start: %x%x, Size:%x%x, Type: %x", CR, LF, 0
+kernel_load_error_msg: db "Failed to load kernel", CR, LF, 0
+kernel_load_success_msg: db "Kernel loaded", CR, LF, 0
