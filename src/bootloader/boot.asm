@@ -210,3 +210,4 @@ pmode:
     mov gs, ax
     mov ss, ax
     ;TODO: What do we do with esp/ebp? Do we need a bigger stack here? We have 30KB of stack. Not much.
+    jmp 0x8000

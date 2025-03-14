@@ -20,3 +20,21 @@
 ### High memory
 
 Unclear. This is not well defined and probably needs to be mapped out by the bootloader?
+
+## VGA Details
+
+Attribute byte
+
+|7              |6|5|4    |3        |2|1|0    |
+|---------------|---------|---------|---------|
+|BG bright/blink|BG colour|FG bright|FG colour|
+
+Standard colour palette:
+0 = black        8 = dark gray
+1 = blue         9 = light blue
+2 = green        10 = light green
+3 = cyan         11 = light cyan
+4 = red          12 = light red
+5 = magenta      13 = light magenta
+6 = brown        14 = yellow
+7 = light gray   15 - white

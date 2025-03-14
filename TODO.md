@@ -4,24 +4,33 @@
 
 ### High priority
 
-- PM logging
-- Make sure kernel code is debuggable
-- Kernel code that actually does something (with VGA, for example)
+- Protected mode print functions with format printing
+- VGA driver
+  - Minimal stuff we need:
+    - Setting and reading registers
+    - Mode setting (text mode for now, but graphics mode later)
+    - Text mode functions
 
 ### Low priority
 
+- PM logging
+  - Way to do this so that we don't need to duplicate it in the bootloader and kernel?
+  - Can't reference kernel code from bootloader (except entry point) because linker doesn't define order
+    - Well... we could define them in a separate section... but that sounds like more trouble than it's worth
+  - Can we reference bootloader code from the kernel? Probably.
+  - Ahhhh we could define these functions in C and then link with the kernel and the bootloader.
+    - This works and is most flexible, but might make the bootloader bigger than necessary. I'd like to keep it below 2 segments if possible.
 - Be flexible in how many sectors we load from floppy disk so that the kernel code isn't truncated
 - Pass parameters from make into build.sh files to avoid duplication
-- See if we can jump to 32-bit code while in Real Mode. If not, we need to switch to PM in the bootloader.
+- Portability of A20 gate
+- Remove `LOAD segment with RWX permissions` warning when linking kernel
+- Remove `.note.GNU_stack` warning when linking kernel
+- Report switch to protected mode
+- Firm up memory map (how does this work when we don't necessarily know the memory layout?)
 
-## Tasks in progress (and subtask breakdown):
+# Tasks in progress (and subtask breakdown):
 
-- __BLOCKED__ Informative bootloader messages
-  - __DONE__ Report enumerated memory
-  - Report switch to protected mode
-  - __DONE__ Report any failures
-- __BLOCKED__ Firm up memory map (how does this work when we don't necessarily know the memory layout?)
-  - Preliminary high memory map (blocked on enumerating high memory and how these two will work together)
+- Sized string data type
 
 ## Finished
 
@@ -44,3 +53,5 @@ This exists mostly for my own benefit, so that I can see progress.
 - Enumerate memory in bootloader
 - Switch to protected mode
 - Set up data segment registers for PM
+- Kernel code that actually does something (with VGA, for example)
+- Make sure kernel code is debuggable
