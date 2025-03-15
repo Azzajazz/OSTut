@@ -44,15 +44,15 @@ typedef struct {
     u32 length;
 } String;
 
-u32 cstring_length(char *cstr) {
+u32 cstring_length(const char *cstr) {
     u32 length = 0;
-    for (char *p = cstr; *p; ++p) {
+    for (const char *p = cstr; *p; ++p) {
         length++;
     }
     return length;
 }
 
-String string_lit(const char *literal) {
+String string_lit(char *literal) {
     return (String){.data = literal, .length = cstring_length(literal)};
 }
 
@@ -148,10 +148,138 @@ String string_lit(const char *literal) {
 #define VGA_INPUT_STATUS1_REG_MONO 0x3ba
 #define VGA_INPUT_STATUS1_REG_COL 0x3da
 
+#define VGA_COL_BLACK 0x00
+#define VGA_COL_BLUE 0x01
+#define VGA_COL_GREEN 0x02
+#define VGA_COL_CYAN 0x03
+#define VGA_COL_RED 0x04
+#define VGA_COL_MAGENTA 0x05
+#define VGA_COL_BROWN 0x06
+#define VGA_COL_LIGHTGREY 0x07
+#define VGA_COL_DARKGREY 0x08
+#define VGA_COL_LIGHTBLUE 0x09
+#define VGA_COL_LIGHTGREEN 0x10
+#define VGA_COL_LIGHTCYAN 0x11
+#define VGA_COL_LIGHTRED 0x12
+#define VGA_COL_LIGHTMAGENTA 0x13
+#define VGA_COL_YELLOW 0x14
+#define VGA_COL_WHITE 0x15
 
+// TODO: This is not the only possible width and height
+#define VGA_TEXT_BUFFER_WIDTH 80
+#define VGA_TEXT_BUFFER_HEIGHT 50
 volatile u16 *vga_buffer = (u16*)0xb8000;
 
+typedef enum {
+    VGA_MODE_TEXT,
+} Vga_Mode;
+
+void vga_init_cursor(void);
+
+void vga_set_mode(Vga_Mode mode) {
+    switch (mode) {
+        case VGA_MODE_TEXT:
+            vga_init_cursor();
+            // TODO: How do you enable text mode?
+            return;
+    }
+}
+
+// TODO: Should these register read and writes save addresses and load them back?
+u8 vga_read_indexed_register(u16 addr_port, u16 data_port, u8 reg_idx) {
+    x86_io_out8(addr_port, reg_idx);
+    // TODO: I/O delay
+    x86_io_out8(0x80, 0x00);
+    return x86_io_in8(data_port);
+}
+
+void vga_write_indexed_register(u16 addr_port, u16 data_port, u8 reg_idx, u8 data) {
+    x86_io_out8(addr_port, reg_idx);
+    // TODO: I/O delay
+    x86_io_out8(data_port, data);
+}
+
+u8 vga_read_crtc_register(u8 reg_idx) {
+    // TODO: Check if we should use REGD or REGB
+    return vga_read_indexed_register(
+        VGA_CRTC_ADDR_REGD,
+        VGA_CRTC_DATA_REGD,
+        reg_idx
+    );
+}
+
+void vga_write_crtc_register(u8 reg_idx, u8 value) {
+    return vga_write_indexed_register(
+        VGA_CRTC_ADDR_REGD,
+        VGA_CRTC_DATA_REGD,
+        reg_idx, value
+    );
+}
+
+// NOTE: Only valid in text mode
+u16 vga_get_cursor_index() {
+    u8 pos_high = vga_read_indexed_register(
+        VGA_CRTC_ADDR_REGD,
+        VGA_CRTC_DATA_REGD,
+        VGA_CRTC_CURSOR_LOC_HIGH_IDX
+    );
+    u8 pos_low = vga_read_indexed_register(
+        VGA_CRTC_ADDR_REGD,
+        VGA_CRTC_DATA_REGD,
+        VGA_CRTC_CURSOR_LOC_LOW_IDX
+    );
+    return pos_high << 8 | pos_low;
+}
+
+// NOTE: Only valid in text mode
+void vga_set_cursor_index(u16 index) {
+    vga_write_indexed_register(
+        VGA_CRTC_ADDR_REGD,
+        VGA_CRTC_DATA_REGD,
+        VGA_CRTC_CURSOR_LOC_HIGH_IDX,
+        index >> 8
+    );
+    vga_write_indexed_register(
+        VGA_CRTC_ADDR_REGD,
+        VGA_CRTC_DATA_REGD,
+        VGA_CRTC_CURSOR_LOC_LOW_IDX,
+        index & 0xff
+    );
+}
+
+// NOTE: Only valid in text mode
+void vga_init_cursor() {
+    vga_set_cursor_index(0);
+    u8 max_scan_line = vga_read_crtc_register(VGA_CRTC_MAX_SCAN_LINE_IDX) & 0x1f;
+    // TODO: Preserve reserved fields
+    vga_write_crtc_register(VGA_CRTC_CURSOR_START_IDX, max_scan_line - 3);
+    vga_write_crtc_register(VGA_CRTC_CURSOR_END_IDX, max_scan_line);
+    // Set the end scan line to the maximum
+}
+
+// I/O code
+// NOTE: Only supports VGA hardware
+
+void io_clear_screen() {
+    for (int i = 0; i < VGA_TEXT_BUFFER_WIDTH * VGA_TEXT_BUFFER_HEIGHT; ++i) {
+        // NOTE: The foreground colour is set to light grey because the cursor uses this.
+        vga_buffer[i] = ' ' | (VGA_COL_BLACK << 12) | (VGA_COL_LIGHTGREY << 8);
+    }
+}
+
+void io_print_char(char c) {
+    //TODO: Allow custom background and foreground colours
+    //TODO: Newline and carriage return stuff
+    u16 cursor_index = vga_get_cursor_index();
+    vga_buffer[cursor_index] = c | (VGA_COL_BLACK << 12) | (VGA_COL_LIGHTGREY << 8);
+    vga_set_cursor_index(cursor_index + 1);
+}
+
+
 void kmain() {
-    *vga_buffer = 'a' | 0x7 << 8;
+    vga_set_mode(VGA_MODE_TEXT);
+    io_clear_screen();
+    io_print_char('a');
+    io_print_char('b');
     for(;;);
 }

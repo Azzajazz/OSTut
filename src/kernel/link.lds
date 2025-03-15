@@ -5,6 +5,7 @@ PHDRS {
 
 SECTIONS {
     . = 0x8000;
+    .entry : { *(.entry) } :code
     .text : { *(.text) } :code
     .data : { *(.data) }
     /DISCARD/ : { *(.eh_frame) }
