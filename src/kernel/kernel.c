@@ -269,17 +269,26 @@ void io_clear_screen() {
 
 void io_print_char(char c) {
     //TODO: Allow custom background and foreground colours
-    //TODO: Newline and carriage return stuff
     u16 cursor_index = vga_get_cursor_index();
-    vga_buffer[cursor_index] = c | (VGA_COL_BLACK << 12) | (VGA_COL_LIGHTGREY << 8);
-    vga_set_cursor_index(cursor_index + 1);
+    if (c == '\n') {
+        vga_set_cursor_index(
+            cursor_index + VGA_TEXT_BUFFER_WIDTH
+                - (cursor_index % VGA_TEXT_BUFFER_WIDTH)
+        );
+    }
+    else {
+        vga_buffer[cursor_index] = c | (VGA_COL_BLACK << 12) | (VGA_COL_LIGHTGREY << 8);
+        vga_set_cursor_index(cursor_index + 1);
+    }
 }
 
 
 void kmain() {
     vga_set_mode(VGA_MODE_TEXT);
     io_clear_screen();
-    io_print_char('a');
-    io_print_char('b');
+    for (int i = 0; i < VGA_TEXT_BUFFER_WIDTH + 5; ++i) {
+        io_print_char('a');
+    }
+    io_print_char('\n');
     for(;;);
 }
