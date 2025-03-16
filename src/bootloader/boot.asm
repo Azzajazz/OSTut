@@ -172,7 +172,7 @@ enumerate_success:
 enumerate_done:
     clc
     mov ah, 0x02
-    mov al, 3
+    mov al, 5
     mov ch, 0
     mov cl, 3
     mov dh, 0

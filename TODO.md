@@ -4,12 +4,6 @@
 
 ### High priority
 
-- Protected mode print functions with format printing
-- VGA driver
-  - Minimal stuff we need:
-    - Setting and reading registers
-    - Mode setting (text mode for now, but graphics mode later)
-    - Text mode functions
 
 ### Low priority
 
@@ -30,7 +24,12 @@
 
 # Tasks in progress (and subtask breakdown):
 
-- Sized string data type
+- Protected mode print functions with format printing
+- VGA driver
+  - Minimal stuff we need:
+    - Setting and reading registers
+    - Mode setting (text mode for now, but graphics mode later)
+    - Text mode functions
 
 ## Finished
 
@@ -55,3 +54,4 @@ This exists mostly for my own benefit, so that I can see progress.
 - Set up data segment registers for PM
 - Kernel code that actually does something (with VGA, for example)
 - Make sure kernel code is debuggable
+- Sized string data type

@@ -5,7 +5,7 @@ typedef unsigned short u16;
 typedef int i32;
 typedef unsigned int u32;
 
-// TODO(Azzajazz): Move these to an x86 specific file later
+// TODO: Move these to an x86 specific file later
 u8 x86_io_in8(u16 port) {
     u8 result;
     asm ("in %0, %1" : "=a" (result) : "d" (port));
@@ -167,7 +167,7 @@ String string_lit(char *literal) {
 
 // TODO: This is not the only possible width and height
 #define VGA_TEXT_BUFFER_WIDTH 80
-#define VGA_TEXT_BUFFER_HEIGHT 50
+#define VGA_TEXT_BUFFER_HEIGHT 25
 volatile u16 *vga_buffer = (u16*)0xb8000;
 
 typedef enum {
@@ -267,18 +267,39 @@ void io_clear_screen() {
     }
 }
 
+void io_scroll_screen() {
+    for (int i = VGA_TEXT_BUFFER_WIDTH; i < VGA_TEXT_BUFFER_WIDTH * VGA_TEXT_BUFFER_HEIGHT; ++i) {
+        vga_buffer[i - VGA_TEXT_BUFFER_WIDTH] = vga_buffer[i];
+    }
+    for (int i = 0; i < VGA_TEXT_BUFFER_WIDTH; ++i) {
+        vga_buffer[VGA_TEXT_BUFFER_WIDTH * (VGA_TEXT_BUFFER_HEIGHT - 1) + i] = ' ' | (VGA_COL_BLACK << 12) | (VGA_COL_LIGHTGREY << 8);
+    }
+    u16 cursor_index = vga_get_cursor_index();
+    vga_set_cursor_index(VGA_TEXT_BUFFER_WIDTH * (VGA_TEXT_BUFFER_HEIGHT - 1));
+}
+
 void io_print_char(char c) {
     //TODO: Allow custom background and foreground colours
+    //TODO: Screen scrolling
     u16 cursor_index = vga_get_cursor_index();
     if (c == '\n') {
-        vga_set_cursor_index(
-            cursor_index + VGA_TEXT_BUFFER_WIDTH
-                - (cursor_index % VGA_TEXT_BUFFER_WIDTH)
-        );
+        if (cursor_index < VGA_TEXT_BUFFER_WIDTH * (VGA_TEXT_BUFFER_HEIGHT - 1)) {
+            cursor_index += VGA_TEXT_BUFFER_WIDTH - (cursor_index % VGA_TEXT_BUFFER_WIDTH);
+            vga_set_cursor_index(cursor_index);
+        }
+        else {
+            io_scroll_screen();
+        }
     }
     else {
         vga_buffer[cursor_index] = c | (VGA_COL_BLACK << 12) | (VGA_COL_LIGHTGREY << 8);
-        vga_set_cursor_index(cursor_index + 1);
+        if (cursor_index < VGA_TEXT_BUFFER_WIDTH * VGA_TEXT_BUFFER_HEIGHT - 1) {
+            cursor_index += 1;
+            vga_set_cursor_index(cursor_index);
+        }
+        else {
+            io_scroll_screen();
+        }
     }
 }
 
@@ -286,9 +307,12 @@ void io_print_char(char c) {
 void kmain() {
     vga_set_mode(VGA_MODE_TEXT);
     io_clear_screen();
-    for (int i = 0; i < VGA_TEXT_BUFFER_WIDTH + 5; ++i) {
+    for (int i = 0; i < VGA_TEXT_BUFFER_HEIGHT - 1; ++i) {
+        io_print_char('a' + i);
+        io_print_char('\n');
+    }
+    for (int i = 0; i < VGA_TEXT_BUFFER_WIDTH; ++i) {
         io_print_char('a');
     }
-    io_print_char('\n');
     for(;;);
 }
