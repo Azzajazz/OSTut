@@ -52,7 +52,7 @@ u32 cstring_length(const char *cstr) {
     return length;
 }
 
-String string_lit(char *literal) {
+String from_cstr(char *literal) {
     return (String){.data = literal, .length = cstring_length(literal)};
 }
 
@@ -303,16 +303,16 @@ void io_print_char(char c) {
     }
 }
 
+void io_print_string(String str) {
+    for (u32 i = 0; i < str.length; ++i) {
+        io_print_char(str.data[i]);
+    }
+}
+
 
 void kmain() {
     vga_set_mode(VGA_MODE_TEXT);
     io_clear_screen();
-    for (int i = 0; i < VGA_TEXT_BUFFER_HEIGHT - 1; ++i) {
-        io_print_char('a' + i);
-        io_print_char('\n');
-    }
-    for (int i = 0; i < VGA_TEXT_BUFFER_WIDTH; ++i) {
-        io_print_char('a');
-    }
+    io_print_string(from_cstr("Hello, world!"));
     for(;;);
 }
