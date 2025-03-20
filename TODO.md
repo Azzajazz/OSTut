@@ -21,10 +21,15 @@
 - Remove `.note.GNU_stack` warning when linking kernel
 - Report switch to protected mode
 - Firm up memory map (how does this work when we don't necessarily know the memory layout?)
+- Assess whether we really need to vendor the toolchain
+- Memory index type so that we don't assume 32-bit addresses
 
 # Tasks in progress (and subtask breakdown):
 
 - Protected mode print functions with format printing
+  - u8, u16, u32, u64 and i8, etc. equivalents for format printing
+  - Hexadecimal format printing
+  - Pointer format printing
 - VGA driver
   - Minimal stuff we need:
     - Setting and reading registers
