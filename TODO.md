@@ -7,7 +7,7 @@
 
 ### Low priority
 
-- PM logging
+- PM bootloader logging
   - Way to do this so that we don't need to duplicate it in the bootloader and kernel?
   - Can't reference kernel code from bootloader (except entry point) because linker doesn't define order
     - Well... we could define them in a separate section... but that sounds like more trouble than it's worth
@@ -23,13 +23,10 @@
 - Firm up memory map (how does this work when we don't necessarily know the memory layout?)
 - Assess whether we really need to vendor the toolchain
 - Memory index type so that we don't assume 32-bit addresses
+- Pointer format printing
 
 # Tasks in progress (and subtask breakdown):
 
-- Protected mode print functions with format printing
-  - u8, u16, u32, u64 and i8, etc. equivalents for format printing
-  - Hexadecimal format printing
-  - Pointer format printing
 - VGA driver
   - Minimal stuff we need:
     - Setting and reading registers
@@ -60,3 +57,6 @@ This exists mostly for my own benefit, so that I can see progress.
 - Kernel code that actually does something (with VGA, for example)
 - Make sure kernel code is debuggable
 - Sized string data type
+- Protected mode print functions with format printing
+  - u8, u16, u32, u64 and i8, etc. equivalents for format printing
+  - Hexadecimal format printing

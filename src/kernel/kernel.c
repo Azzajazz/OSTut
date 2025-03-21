@@ -345,11 +345,12 @@ void io_print_u8(u8 value) {
 }
 
 void io_print_i32(i32 value) {
+    u32 to_print = *(u32*)&value;
     if (value < 0) {
         io_print_char('-');
-        value = -value;
+        to_print = ~to_print + 1;
     }
-    io_print_u32(value);
+    io_print_u32(to_print);
 }
 
 void io_print_i16(i16 value) {
@@ -576,6 +577,10 @@ void kmain() {
     io_print_string(from_cstr("i16:\n"));
     io_print_fmt(from_cstr("  i16 min is %i16, i16 max is %i16\n"), -32768, 32767);
     io_print_string(from_cstr("i32:\n"));
-    io_print_fmt(from_cstr("  i32 min is %i32, i32 max is %i32\n"), -2147483648, 2147483647);
+    // NOTE: -2147483648 is not a literal. It is the unary negation applied to the literal 2147483648.
+    // This literal is too big to fit in an i32 and results in UB when used in this context. Hence we use
+    // -2147483647 - 1 instead.
+    // TODO: Add I32_MIN, I32_MAX, etc.
+    io_print_fmt(from_cstr("  i32 min is %i32, i32 max is %i32\n"), -2147483647 - 1, 2147483647);
     for(;;);
 }
