@@ -4,9 +4,14 @@
 
 ### High priority
 
+- Keyboard driver
+- File system driver
+- ELF loading
+- Interrupts
 
 ### Low priority
 
+- Address some kernel TODOs
 - PM bootloader logging
   - Way to do this so that we don't need to duplicate it in the bootloader and kernel?
   - Can't reference kernel code from bootloader (except entry point) because linker doesn't define order
@@ -27,7 +32,7 @@
 
 # Tasks in progress (and subtask breakdown):
 
-- VGA driver
+- __ONGOING__ VGA driver
   - Minimal stuff we need:
     - Setting and reading registers
     - Mode setting (text mode for now, but graphics mode later)
