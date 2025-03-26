@@ -7,7 +7,6 @@
 - Keyboard driver
 - File system driver
 - ELF loading
-- Interrupts
 
 ### Low priority
 
@@ -31,6 +30,26 @@
 - Pointer format printing
 
 # Tasks in progress (and subtask breakdown):
+- Gate descriptor: Page 57
+- Reserved vector assignments: page 45
+
+- Interrupts
+  - __DONE__ Mark IDT in memory map 
+  - Set up stubs for the interrupts
+    - Make sure the interrupt is identifiable
+    - Have the default handler fail ungracefully for now
+  - Set up IDT (probably in C)
+    - __DONE__ Initialise first 32 handlers
+  - Initialise PIC
+  - Set up default handlers
+    - Explore whether this can be done in C code as well
+  - Set up PIT handler to ignore
+
+-  PIC driver
+  - Chapter 12 of the 420EX datasheet
+  - Initialisation code through ICWs
+  - Also OCWs
+  - Programmable interrupt: page 84
 
 - __ONGOING__ VGA driver
   - Minimal stuff we need:

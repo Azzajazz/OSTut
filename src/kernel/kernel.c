@@ -323,7 +323,54 @@ void io_print_fmt(String str, ...) {
 }
 
 
+typedef struct {
+    u16 offset_low;
+    u16 selector;
+    u8 word_count;
+    u8 flags;
+    u16 offset_high;
+} Gate_Descriptor;
+
+typedef struct __attribute__((packed)) {
+    u16 size;
+    u32 offset;
+} Idtr;
+
+volatile Gate_Descriptor *g_idt_base = (Gate_Descriptor*)0xbc00;
+volatile Idtr *g_idtr_base = (Idtr*)0xc400;
+#define DESC_PRES (1 << 7)
+#define DESC_PRIV_LVL3 (3 << 4)
+#define DESC_PRIV_LVL0 (0 << 4)
+#define DESC_TRAP_TYPE 0xf
+
+__attribute__((interrupt))
+void default_trap_handler(struct stack_frame *frame) {
+    io_print_string(from_cstr("Called the default handler!"));
+    return;
+}
+
+void init_idt() {
+    // Trap gates for exceptions
+    for (int i = 0; i < 32; ++i) {
+        g_idt_base[i].offset_low = (u32)default_trap_handler & 0xffff;
+        g_idt_base[i].selector = 0x08;
+        g_idt_base[i].word_count = 0;
+        g_idt_base[i].flags = DESC_PRES | DESC_PRIV_LVL0 | DESC_TRAP_TYPE;
+        g_idt_base[i].offset_high = (u32)default_trap_handler >> 16;
+    }
+
+    g_idtr_base->offset = (u32)g_idt_base;
+    g_idtr_base->size = 256 * 8; // 256 8-byte entries
+
+    asm (
+        "lidt [0xc400]\n\t"
+        "sti"
+    );
+}
+
+
 void kmain() {
+    init_idt();
     vga_set_mode(VGA_MODE_TEXT);
     io_clear_screen();
     io_print_string(from_cstr("------------------------------\n"));
