@@ -27,3 +27,12 @@ void x86_io_out16(u16 port, u16 value) {
 void x86_io_out32(u16 port, u32 value) {
     asm("out %0, %1" : : "d" (port), "a" (value));
 }
+
+__attribute__((naked))
+__attribute__((no_caller_saved_registers))
+void x86_halt() {
+    asm(
+        "cli\n\t"
+        "hlt"
+    );
+}

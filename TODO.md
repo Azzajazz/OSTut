@@ -7,6 +7,7 @@
 - Keyboard driver
 - File system driver
 - ELF loading
+- Read up on PCI interface
 
 ### Low priority
 
@@ -28,10 +29,12 @@
 - Assess whether we really need to vendor the toolchain
 - Memory index type so that we don't assume 32-bit addresses
 - Pointer format printing
+- Investigate whether we need to define the interrupt attribute frame
 
 # Tasks in progress (and subtask breakdown):
-- Gate descriptor: Page 57
-- Reserved vector assignments: page 45
+- Gate descriptor: Page 57 of 486 datasheet
+- Reserved vector assignments: page 45 of 486 datasheet
+- PIC: Chapter 12 of the 420EX datasheet
 
 - Interrupts
   - __DONE__ Mark IDT in memory map 
@@ -46,7 +49,6 @@
   - Set up PIT handler to ignore
 
 -  PIC driver
-  - Chapter 12 of the 420EX datasheet
   - Initialisation code through ICWs
   - Also OCWs
   - Programmable interrupt: page 84

@@ -323,6 +323,38 @@ void io_print_fmt(String str, ...) {
 }
 
 
+// PIC code
+#define PIC_MASTER_COMMAND 0x20
+#define PIC_MASTER_DATA 0x21
+#define PIC_SLAVE_COMMAND 0xa0
+#define PIC_SLAVE_DATA 0xa1
+
+#define PIC_ICW1_ID 0x10
+#define PIC_ICW1_ICW4 0x1
+
+#define PIC_MASTER_ICW3_SLAVE_CONN 0x4
+#define PIC_SLAVE_ICW3_ID 0x2
+
+#define PIC_ICW4_FULLY_NESTED 0x10
+#define PIC_ICW4_AUTO_EOI 0x2
+#define PIC_ICW4_MICRO 0x1
+
+void init_pic(u8 master_base, u8 slave_base) {
+    x86_io_out8(PIC_MASTER_COMMAND, PIC_ICW1_ID | PIC_ICW1_ICW4);
+    x86_io_out8(PIC_SLAVE_COMMAND, PIC_ICW1_ID | PIC_ICW1_ICW4);
+
+    x86_io_out8(PIC_MASTER_DATA, master_base << 3);
+    x86_io_out8(PIC_SLAVE_DATA, slave_base << 3);
+
+    x86_io_out8(PIC_MASTER_DATA, PIC_MASTER_ICW3_SLAVE_CONN);
+    x86_io_out8(PIC_SLAVE_DATA, PIC_SLAVE_ICW3_ID);
+
+    x86_io_out8(PIC_MASTER_DATA, PIC_ICW4_MICRO);
+    x86_io_out8(PIC_SLAVE_DATA, PIC_ICW4_MICRO);
+}
+
+
+// Interrupt initialisation code
 typedef struct {
     u16 offset_low;
     u16 selector;
@@ -345,18 +377,24 @@ volatile Idtr *g_idtr_base = (Idtr*)0xc400;
 
 __attribute__((interrupt))
 void default_trap_handler(struct stack_frame *frame) {
-    io_print_string(from_cstr("Called the default handler!"));
-    return;
+    x86_halt();
+}
+
+void fill_idt_entry(volatile Gate_Descriptor *entry, u32 offset, u16 selector, u8 flags) {
+    entry->offset_low = offset & 0xffff;
+    entry->selector = selector;
+    entry->word_count = 0;
+    entry->flags = flags;
+    entry->offset_high = offset >> 16;
 }
 
 void init_idt() {
     // Trap gates for exceptions
     for (int i = 0; i < 32; ++i) {
-        g_idt_base[i].offset_low = (u32)default_trap_handler & 0xffff;
-        g_idt_base[i].selector = 0x08;
-        g_idt_base[i].word_count = 0;
-        g_idt_base[i].flags = DESC_PRES | DESC_PRIV_LVL0 | DESC_TRAP_TYPE;
-        g_idt_base[i].offset_high = (u32)default_trap_handler >> 16;
+        fill_idt_entry(
+            &g_idt_base[i], (u32)&default_trap_handler,
+            0x08, DESC_PRES | DESC_PRIV_LVL0 | DESC_TRAP_TYPE
+        );
     }
 
     g_idtr_base->offset = (u32)g_idt_base;
@@ -368,9 +406,14 @@ void init_idt() {
     );
 }
 
+void init_interrupts() {
+    init_pic(0x20, 0x30);
+    init_idt();
+}
+
 
 void kmain() {
-    init_idt();
+    init_interrupts();
     vga_set_mode(VGA_MODE_TEXT);
     io_clear_screen();
     io_print_string(from_cstr("------------------------------\n"));
