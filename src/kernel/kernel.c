@@ -375,10 +375,92 @@ volatile Idtr *g_idtr_base = (Idtr*)0xc400;
 #define DESC_PRIV_LVL0 (0 << 4)
 #define DESC_TRAP_TYPE 0xf
 
-__attribute__((interrupt))
-void default_trap_handler(struct stack_frame *frame) {
-    x86_halt();
+typedef struct {
+    u32 eip;
+    u32 eflags;
+} Handler_Stack_Frame;
+
+#define INTERRUPT_STUB(ivt_index)                             \
+__attribute__((interrupt))                                    \
+void interrupt_stub_##ivt_index(Handler_Stack_Frame *frame) { \
+    int index = ivt_index;                                    \
+    x86_halt();                                               \
 }
+
+#define EXCEPTION_STUB(ivt_index)                                                \
+__attribute__((interrupt))                                                       \
+void exception_stub_##ivt_index(Handler_Stack_Frame *frame, unsigned int code) { \
+    int index = ivt_index;                                                       \
+    x86_halt();                                                                  \
+}
+
+EXCEPTION_STUB(0);
+EXCEPTION_STUB(1);
+EXCEPTION_STUB(2);
+EXCEPTION_STUB(3);
+EXCEPTION_STUB(4);
+EXCEPTION_STUB(5);
+EXCEPTION_STUB(6);
+EXCEPTION_STUB(7);
+EXCEPTION_STUB(8);
+EXCEPTION_STUB(9);
+EXCEPTION_STUB(10);
+EXCEPTION_STUB(11);
+EXCEPTION_STUB(12);
+EXCEPTION_STUB(13);
+EXCEPTION_STUB(14);
+EXCEPTION_STUB(15);
+EXCEPTION_STUB(16);
+EXCEPTION_STUB(17);
+EXCEPTION_STUB(18);
+EXCEPTION_STUB(19);
+EXCEPTION_STUB(20);
+EXCEPTION_STUB(21);
+EXCEPTION_STUB(22);
+EXCEPTION_STUB(23);
+EXCEPTION_STUB(24);
+EXCEPTION_STUB(25);
+EXCEPTION_STUB(26);
+EXCEPTION_STUB(27);
+EXCEPTION_STUB(28);
+EXCEPTION_STUB(29);
+EXCEPTION_STUB(30);
+EXCEPTION_STUB(31);
+
+u32 handler_table[] = {
+    (u32)exception_stub_0,
+    (u32)exception_stub_1,
+    (u32)exception_stub_2,
+    (u32)exception_stub_3,
+    (u32)exception_stub_4,
+    (u32)exception_stub_5,
+    (u32)exception_stub_6,
+    (u32)exception_stub_7,
+    (u32)exception_stub_8,
+    (u32)exception_stub_9,
+    (u32)exception_stub_10,
+    (u32)exception_stub_11,
+    (u32)exception_stub_12,
+    (u32)exception_stub_13,
+    (u32)exception_stub_14,
+    (u32)exception_stub_15,
+    (u32)exception_stub_16,
+    (u32)exception_stub_17,
+    (u32)exception_stub_18,
+    (u32)exception_stub_19,
+    (u32)exception_stub_20,
+    (u32)exception_stub_21,
+    (u32)exception_stub_22,
+    (u32)exception_stub_23,
+    (u32)exception_stub_24,
+    (u32)exception_stub_25,
+    (u32)exception_stub_26,
+    (u32)exception_stub_27,
+    (u32)exception_stub_28,
+    (u32)exception_stub_29,
+    (u32)exception_stub_30,
+    (u32)exception_stub_31,
+};
 
 void fill_idt_entry(volatile Gate_Descriptor *entry, u32 offset, u16 selector, u8 flags) {
     entry->offset_low = offset & 0xffff;
@@ -392,7 +474,7 @@ void init_idt() {
     // Trap gates for exceptions
     for (int i = 0; i < 32; ++i) {
         fill_idt_entry(
-            &g_idt_base[i], (u32)&default_trap_handler,
+            &g_idt_base[i], handler_table[i],
             0x08, DESC_PRES | DESC_PRIV_LVL0 | DESC_TRAP_TYPE
         );
     }

@@ -29,7 +29,6 @@
 - Assess whether we really need to vendor the toolchain
 - Memory index type so that we don't assume 32-bit addresses
 - Pointer format printing
-- Investigate whether we need to define the interrupt attribute frame
 
 # Tasks in progress (and subtask breakdown):
 - Gate descriptor: Page 57 of 486 datasheet
