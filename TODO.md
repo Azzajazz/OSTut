@@ -8,18 +8,12 @@
 - File system driver
 - ELF loading
 - Read up on PCI interface
+- Be flexible in how many sectors we load from floppy disk so that the kernel code isn't truncated
 
 ### Low priority
 
 - Address some kernel TODOs
 - PM bootloader logging
-  - Way to do this so that we don't need to duplicate it in the bootloader and kernel?
-  - Can't reference kernel code from bootloader (except entry point) because linker doesn't define order
-    - Well... we could define them in a separate section... but that sounds like more trouble than it's worth
-  - Can we reference bootloader code from the kernel? Probably.
-  - Ahhhh we could define these functions in C and then link with the kernel and the bootloader.
-    - This works and is most flexible, but might make the bootloader bigger than necessary. I'd like to keep it below 2 segments if possible.
-- Be flexible in how many sectors we load from floppy disk so that the kernel code isn't truncated
 - Pass parameters from make into build.sh files to avoid duplication
 - Portability of A20 gate
 - Remove `LOAD segment with RWX permissions` warning when linking kernel
@@ -29,28 +23,13 @@
 - Assess whether we really need to vendor the toolchain
 - Memory index type so that we don't assume 32-bit addresses
 - Pointer format printing
+- Make interrupt and exception handlers give more information
 
-# Tasks in progress (and subtask breakdown):
-- Gate descriptor: Page 57 of 486 datasheet
-- Reserved vector assignments: page 45 of 486 datasheet
-- PIC: Chapter 12 of the 420EX datasheet
+## Tasks in progress (and subtask breakdown):
 
-- Interrupts
-  - __DONE__ Mark IDT in memory map 
-  - Set up stubs for the interrupts
-    - Make sure the interrupt is identifiable
-    - Have the default handler fail ungracefully for now
-  - Set up IDT (probably in C)
-    - __DONE__ Initialise first 32 handlers
-  - Initialise PIC
-  - Set up default handlers
-    - Explore whether this can be done in C code as well
-  - Set up PIT handler to ignore
-
--  PIC driver
-  - Initialisation code through ICWs
-  - Also OCWs
-  - Programmable interrupt: page 84
+- __ONGOING__ PIC driver
+  - __DONE__ Initialisation code through ICWs
+  - __ONGOING__ Also OCWs
 
 - __ONGOING__ VGA driver
   - Minimal stuff we need:
@@ -85,3 +64,10 @@ This exists mostly for my own benefit, so that I can see progress.
 - Protected mode print functions with format printing
   - u8, u16, u32, u64 and i8, etc. equivalents for format printing
   - Hexadecimal format printing
+- Interrupts
+
+## Useful information
+- Gate descriptor: Page 57 of 486 datasheet
+- Reserved vector assignments: page 45 of 486 datasheet
+- PIC: Chapter 12 of the 420EX datasheet
+- Programmable interrupt: page 84

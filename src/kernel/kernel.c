@@ -8,6 +8,10 @@ typedef int16_t i16;
 typedef uint16_t u16;
 typedef int32_t i32;
 typedef uint32_t u32;
+typedef memory_index u32;
+
+#define INTERRUPT __attribute__((interrupt))
+#define PACKED __attribute__((packed))
 
 // NOTE: This is a unity build, so we're including C files directly
 #include "x86.c"
@@ -17,11 +21,11 @@ typedef uint32_t u32;
 
 typedef struct {
     char *data;
-    u32 length;
+    memory_index length;
 } String;
 
-u32 cstring_length(const char *cstr) {
-    u32 length = 0;
+memory_index cstring_length(const char *cstr) {
+    memory_index length = 0;
     for (const char *p = cstr; *p; ++p) {
         length++;
     }
@@ -33,7 +37,7 @@ String from_cstr(char *literal) {
 }
 
 // TODO: We want to assert that start_index < str.length, but we don't have an assert.
-String string_after_index(String str, u32 start_index) {
+String string_after_index(String str, memory_index start_index) {
     return (String){str.data + start_index, str.length - start_index};
 }
 
@@ -85,7 +89,7 @@ void io_print_char(char c) {
 }
 
 void io_print_string(String str) {
-    for (u32 i = 0; i < str.length; ++i) {
+    for (memory_index i = 0; i < str.length; ++i) {
         io_print_char(str.data[i]);
     }
 }
@@ -180,7 +184,7 @@ bool is_digit(char c) {
 int read_int_prefix(String str) {
     int value = 0;
 
-    for (u32 i = 0; i < str.length; ++i) {
+    for (memory_index i = 0; i < str.length; ++i) {
         if (!is_digit(str.data[i])) break;
 
         value *= 10;
@@ -195,7 +199,7 @@ void io_print_fmt(String str, ...) {
     va_list args;
     va_start(args, str);
 
-    for (u32 i = 0; i < str.length; ++i) {
+    for (memory_index i = 0; i < str.length; ++i) {
         switch (state) {
             case FMT_REGULAR: {
                 if (str.data[i] == '%') {
@@ -339,6 +343,8 @@ void io_print_fmt(String str, ...) {
 #define PIC_ICW4_AUTO_EOI 0x2
 #define PIC_ICW4_MICRO 0x1
 
+#define PIC_OCW2_NONSPEC_EOI 0x20
+
 void init_pic(u8 master_base, u8 slave_base) {
     x86_io_out8(PIC_MASTER_COMMAND, PIC_ICW1_ID | PIC_ICW1_ICW4);
     x86_io_out8(PIC_SLAVE_COMMAND, PIC_ICW1_ID | PIC_ICW1_ICW4);
@@ -353,6 +359,13 @@ void init_pic(u8 master_base, u8 slave_base) {
     x86_io_out8(PIC_SLAVE_DATA, PIC_ICW4_MICRO);
 }
 
+void pic_send_eoi(u8 irq) {
+    if (irq > 8) {
+        x86_io_out8(PIC_SLAVE_COMMAND, PIC_OCW2_NONSPEC_EOI);
+    }
+    x86_io_out8(PIC_MASTER_COMMAND, PIC_OCW2_NONSPEC_EOI);
+}
+
 
 // Interrupt initialisation code
 typedef struct {
@@ -363,7 +376,7 @@ typedef struct {
     u16 offset_high;
 } Gate_Descriptor;
 
-typedef struct __attribute__((packed)) {
+typedef struct PACKED {
     u16 size;
     u32 offset;
 } Idtr;
@@ -373,6 +386,7 @@ volatile Idtr *g_idtr_base = (Idtr*)0xc400;
 #define DESC_PRES (1 << 7)
 #define DESC_PRIV_LVL3 (3 << 4)
 #define DESC_PRIV_LVL0 (0 << 4)
+#define DESC_INT_TYPE 0xe
 #define DESC_TRAP_TYPE 0xf
 
 typedef struct {
@@ -380,21 +394,23 @@ typedef struct {
     u32 eflags;
 } Handler_Stack_Frame;
 
-#define INTERRUPT_STUB(ivt_index)                             \
-__attribute__((interrupt))                                    \
-void interrupt_stub_##ivt_index(Handler_Stack_Frame *frame) { \
-    int index = ivt_index;                                    \
-    x86_halt();                                               \
+#define INTERRUPT_STUB(ivt_index)                                       \
+INTERRUPT void interrupt_stub_##ivt_index(Handler_Stack_Frame *frame) { \
+    io_print_fmt(from_cstr("Index: %u32"), ivt_index);                  \
+    x86_halt();                                                         \
 }
 
-#define EXCEPTION_STUB(ivt_index)                                                \
-__attribute__((interrupt))                                                       \
-void exception_stub_##ivt_index(Handler_Stack_Frame *frame, unsigned int code) { \
-    int index = ivt_index;                                                       \
-    x86_halt();                                                                  \
+#define EXCEPTION_STUB(ivt_index)                                                          \
+INTERRUPT void exception_stub_##ivt_index(Handler_Stack_Frame *frame, unsigned int code) { \
+    io_print_fmt(from_cstr("Index: %u32"), ivt_index);                                     \
+    x86_halt();                                                                            \
 }
 
-EXCEPTION_STUB(0);
+INTERRUPT void pit_interrupt_handler(Handler_Stack_Frame *frame) {
+    pic_send_eoi(0);
+    return;
+}
+
 EXCEPTION_STUB(1);
 EXCEPTION_STUB(2);
 EXCEPTION_STUB(3);
@@ -426,9 +442,42 @@ EXCEPTION_STUB(28);
 EXCEPTION_STUB(29);
 EXCEPTION_STUB(30);
 EXCEPTION_STUB(31);
+INTERRUPT_STUB(32);
+INTERRUPT_STUB(33);
+INTERRUPT_STUB(34);
+INTERRUPT_STUB(35);
+INTERRUPT_STUB(36);
+INTERRUPT_STUB(37);
+INTERRUPT_STUB(38);
+INTERRUPT_STUB(39);
+INTERRUPT_STUB(40);
+INTERRUPT_STUB(41);
+INTERRUPT_STUB(42);
+INTERRUPT_STUB(43);
+INTERRUPT_STUB(44);
+INTERRUPT_STUB(45);
+INTERRUPT_STUB(46);
+INTERRUPT_STUB(47);
+INTERRUPT_STUB(48);
+INTERRUPT_STUB(49);
+INTERRUPT_STUB(50);
+INTERRUPT_STUB(51);
+INTERRUPT_STUB(52);
+INTERRUPT_STUB(53);
+INTERRUPT_STUB(54);
+INTERRUPT_STUB(55);
+INTERRUPT_STUB(56);
+INTERRUPT_STUB(57);
+INTERRUPT_STUB(58);
+INTERRUPT_STUB(59);
+INTERRUPT_STUB(60);
+INTERRUPT_STUB(61);
+INTERRUPT_STUB(62);
+INTERRUPT_STUB(63);
+INTERRUPT_STUB(64);
 
 u32 handler_table[] = {
-    (u32)exception_stub_0,
+    (u32)pit_interrupt_handler,
     (u32)exception_stub_1,
     (u32)exception_stub_2,
     (u32)exception_stub_3,
@@ -460,6 +509,39 @@ u32 handler_table[] = {
     (u32)exception_stub_29,
     (u32)exception_stub_30,
     (u32)exception_stub_31,
+    (u32)interrupt_stub_32,
+    (u32)interrupt_stub_33,
+    (u32)interrupt_stub_34,
+    (u32)interrupt_stub_35,
+    (u32)interrupt_stub_36,
+    (u32)interrupt_stub_37,
+    (u32)interrupt_stub_38,
+    (u32)interrupt_stub_39,
+    (u32)interrupt_stub_40,
+    (u32)interrupt_stub_41,
+    (u32)interrupt_stub_42,
+    (u32)interrupt_stub_43,
+    (u32)interrupt_stub_44,
+    (u32)interrupt_stub_45,
+    (u32)interrupt_stub_46,
+    (u32)interrupt_stub_47,
+    (u32)interrupt_stub_48,
+    (u32)interrupt_stub_49,
+    (u32)interrupt_stub_50,
+    (u32)interrupt_stub_51,
+    (u32)interrupt_stub_52,
+    (u32)interrupt_stub_53,
+    (u32)interrupt_stub_54,
+    (u32)interrupt_stub_55,
+    (u32)interrupt_stub_56,
+    (u32)interrupt_stub_57,
+    (u32)interrupt_stub_58,
+    (u32)interrupt_stub_59,
+    (u32)interrupt_stub_60,
+    (u32)interrupt_stub_61,
+    (u32)interrupt_stub_62,
+    (u32)interrupt_stub_63,
+    (u32)interrupt_stub_64,
 };
 
 void fill_idt_entry(volatile Gate_Descriptor *entry, u32 offset, u16 selector, u8 flags) {
@@ -476,6 +558,13 @@ void init_idt() {
         fill_idt_entry(
             &g_idt_base[i], handler_table[i],
             0x08, DESC_PRES | DESC_PRIV_LVL0 | DESC_TRAP_TYPE
+        );
+    }
+
+    for (int i = 32; i < 64; ++i) {
+        fill_idt_entry(
+            &g_idt_base[i], handler_table[i],
+            0x08, DESC_PRES | DESC_PRIV_LVL0 | DESC_INT_TYPE
         );
     }
 
